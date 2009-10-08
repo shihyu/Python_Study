@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-利用 Time Service 自動同步 Windows 的時間
+Description: 利用 Time Service 自動同步 Windows 的時間
+
+Author: Chui-Wen Chiu <sisimi.pchome@gmail.com>
+License: PYTHON SOFTWARE FOUNDATION LICENSE
 """
 import socket
 import re
