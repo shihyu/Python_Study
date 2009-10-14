@@ -63,7 +63,7 @@ def convert(plain):
 if __name__ == '__main__':
     fn = sys.argv[1]
     if os.path.exists(fn):
-        convert("d:\\plain.txt")
+        convert(fn)
     else:
         print 'file not exists'
 
