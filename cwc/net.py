@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+__author__ = "Chui-Wen Chiu"
+__author_email__ = "cwchiu@hotmail.com"
+
 import re
 
 ip_regex =re.compile('(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})')

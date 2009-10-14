@@ -5,6 +5,11 @@ Description: 利用 Time Service 自動同步 Windows 的時間
 Author: Chui-Wen Chiu <sisimi.pchome@gmail.com>
 License: PYTHON SOFTWARE FOUNDATION LICENSE
 """
+
+__author__ = "Chui-Wen Chiu"
+__author_email__ = "cwchiu@hotmail.com"
+
+
 import socket
 import re
 import os

@@ -5,6 +5,10 @@ Description: 透過 Windows Message 操控 Winamp
 Author: Chui-Wen Chiu <sisimi.pchome@gmail.com>
 License: PYTHON SOFTWARE FOUNDATION LICENSE
 """
+
+__author__ = "Chui-Wen Chiu"
+__author_email__ = "cwchiu@hotmail.com"
+
 import win32gui
 import win32api
 import win32con

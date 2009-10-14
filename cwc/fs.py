@@ -1,4 +1,7 @@
 #-*- coding: UTF-8 -*-
+__author__ = "Chui-Wen Chiu"
+__author_email__ = "cwchiu@hotmail.com"
+
 import os
 
 def CreateDir(fd):
