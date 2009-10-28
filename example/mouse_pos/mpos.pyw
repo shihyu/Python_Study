@@ -13,7 +13,7 @@ __author_email__ = "cwchiu@hotmail.com"
 import threading
 import win32gui
 from Tkinter import *
-#win = Toplevel()
+
 win = Tk()
 win.title(string="滑鼠座標")
 win.wm_attributes("-topmost", 1)
