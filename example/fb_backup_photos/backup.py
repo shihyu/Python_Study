@@ -86,9 +86,7 @@ def backup_photos(uid=None):
             
         album_i += 1         
 
-def usage():
-    print 'help'
-    
+
 if __name__ == '__main__':
     if len(sys.argv)==1:
         backup_photos()
@@ -97,15 +95,13 @@ if __name__ == '__main__':
         try:
             opts, args = getopt.getopt(sys.argv[1:], "ho:v", ["uid="])
         except getopt.GetoptError, err:
-            # print help information and exit:
-            print 'def'
-            usage()
             sys.exit(2)
         output = None
         verbose = False
         for o, a in opts:
             if o == "-v":
                 verbose = True
+                print 'v0.1'
             elif o in ("-u", "--uid"):
                 backup_photos(a)
             else:
