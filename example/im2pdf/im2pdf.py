@@ -11,7 +11,7 @@ __author_email__ = "cwchiu@hotmail.com"
 
 import warnings
 warnings.simplefilter('ignore',DeprecationWarning)
-
+import glob
 import codecs
 import Image
 import os
@@ -38,7 +38,7 @@ def createPDF(output_pdf, fn_list):
             output.write(outputStream)
 
         except IOError:
-            print "Cannot convert" + newfilename
+            print "Cannot convert" + fn
 
 
 
@@ -49,9 +49,12 @@ def parseConifg(fn):
     pdf = None
     fn_list = []
     for i,line in enumerate(codecs.open(fn, 'r', 'utf-8')     ):
-        line = line.strip() 
+        line = line.strip() 		
         if i == 0:
             pdf = line
+	elif '*' in line:
+	    for f in glob.glob(line):
+		fn_list.append(f)
         else:
             fn_list.append(line)
 
@@ -62,7 +65,7 @@ if __name__ == '__main__':
         fn = sys.argv[1]
         if os.path.exists(fn):
             fn_list, output_pdf = parseConifg( fn )
-
+	    
             createPDF(output_pdf, fn_list)
         else:
             print 'file not exists'
