@@ -100,15 +100,13 @@ def dup(filter, match_name=True, mode='console'):
 
                     
         
-        if mode == 'win':
-            import view
-            print 'wait for result ...'
-            xml = u'<list id="Result">{0}</list>'.format( u'\r\n'.join(result) )
-            view.view_result( xml.encode('utf-8') )
-        elif mode == 'xml':
-            codecs.open('result.xml', 'w', 'utf-8').write( u'<list id="Result">{0}</list>'.format( u'\r\n'.join(result) ).encode('utf-8')
-            pass
-        
+    if mode == 'win':
+        import view
+        print 'wait for result ...'
+        xml = u'<list id="Result">{0}</list>'.format( u'\r\n'.join(result) )
+        view.view_result( xml.encode('utf-8') )
+    elif mode == 'xml':
+        codecs.open('result.xml', 'w', 'utf-8').write( u'<list id="Result">{0}</list>'.format( u'\r\n'.join(result) ).encode('utf-8') )        
     else:
         pass
         """
