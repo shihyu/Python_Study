@@ -1,0 +1,1 @@
+用法：# 搜尋重複的 pdfpython pyes.py *.pdf注意事項1. Vista/Windows 7 執行時需要使用管理者權限2. Search Engine 要先啟動，Vista/Windows7 需要有管理者權限

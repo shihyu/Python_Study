@@ -14,22 +14,24 @@ import os
 import sys
 import hashlib
 
-def md5_file(fn):
-    with open(fn, 'rb') as f:
-        m = hashlib.md5()
-        m.update(f.read())
-        s = m.hexdigest()
-        #s = md5.new(f.read()).hexdigest()
 
 
-    return s
+def md5_for_file(fn, block_size=2**20):
+    md5 = hashlib.md5()
+    with open(fn, 'rb') as f:    
+        while True:
+            data = f.read(block_size)
+            if not data:
+                break
+            md5.update(data)
+        return md5.digest()
 
 def match_md5(size_table):
     md5_table = {}
     for a in size_table:
         if len(size_table[a])>1:                
             for fn in size_table[a]:
-                md5_code= md5_file(fn)
+                md5_code= md5_for_file(fn)
                 if md5_table.has_key(md5_code):
                     md5_table[md5_code].append(fn)
                 else:
@@ -40,7 +42,6 @@ def match_md5(size_table):
 def match_size(table):
     size_table = {}
     for fn in table:
-        print fn
         size = os.stat(fn).st_size
         if size_table.has_key(size):
             size_table[size].append(fn)
@@ -76,7 +77,7 @@ def dup(filter, match_name=True):
             if len(table[item])>1:
                 # FileSize 比對            
                 size_table = match_size( table[item] )
-                    
+
                 # md5 比對
                 md5_table = match_md5(size_table)
 
@@ -106,5 +107,7 @@ def dup(filter, match_name=True):
 if __name__ == '__main__':
     if len(sys.argv)>1:
         dup(sys.argv[1])
-    
+        print 'Search finish...'
+    else:
+        print 'no'
     
