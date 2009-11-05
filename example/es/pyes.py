@@ -11,8 +11,9 @@ __author_email__ = "cwchiu@hotmail.com"
 
 
 import os
-#import md5
+import sys
 import hashlib
+
 def md5_file(fn):
     with open(fn, 'rb') as f:
         m = hashlib.md5()
@@ -103,4 +104,7 @@ def dup(filter, match_name=True):
             print
         """            
 if __name__ == '__main__':
-    dup("*.jpg")
+    if len(sys.argv)>1:
+        dup(sys.argv[1])
+    
+    
