@@ -13,8 +13,8 @@ __author_email__ = "cwchiu@hotmail.com"
 import os
 import sys
 import hashlib
-
-
+import view
+import codecs
 
 def md5_for_file(fn, block_size=2**20):
     md5 = hashlib.md5()
@@ -53,15 +53,16 @@ def match_size(table):
 
 cmd = 'es.exe %s'
 
-def dup(filter, match_name=True):
+def dup(filter, match_name=True, mode='console'):
     """
     找出重複檔案
     """
     #table = parse_exec_result(filter)
-
+    print 'reading search result...'
     p = os.popen( cmd % filter)
     
     if match_name == True:
+        print 'check file name ...'
         table = {}
         for line in p:
             line = line.strip()
@@ -72,7 +73,9 @@ def dup(filter, match_name=True):
                 table[fn].append( line )
             else:
                 table[fn] = [line]
-                
+
+        print 'check file attribute ...'                     
+        result = []
         for item in table:        
             if len(table[item])>1:
                 # FileSize 比對            
@@ -84,9 +87,28 @@ def dup(filter, match_name=True):
                 # 顯示結果                        
                 for a in md5_table:
                     if len(md5_table[a])>1:
-                        print item
-                        print '\r\n'.join( md5_table[a] )                
-                        print
+                        if mode == 'console':                            
+                            print item
+                            print '\r\n'.join( md5_table[a] )                
+                            print
+                        else:
+                            child_item = u''
+                            for b in md5_table[a]:
+                                child_item += u'<item id="{0}" />\r\n'.format( str.decode(b, 'big5') )
+                                
+                            result.append( u'<name id="{0}">{1}</name>'.format( item.decode('big5'), child_item ) )
+
+                    
+        
+        if mode == 'win':
+            import view
+            print 'wait for result ...'
+            xml = u'<list id="Result">{0}</list>'.format( u'\r\n'.join(result) )
+            view.view_result( xml.encode('utf-8') )
+        elif mode == 'xml':
+            codecs.open('result.xml', 'w', 'utf-8').write( u'<list id="Result">{0}</list>'.format( u'\r\n'.join(result) ).encode('utf-8')
+            pass
+        
     else:
         pass
         """
@@ -103,11 +125,14 @@ def dup(filter, match_name=True):
         
             print '\r\n'.join( md5_table )                
             print
-        """            
+        """
+        
 if __name__ == '__main__':
     if len(sys.argv)>1:
-        dup(sys.argv[1])
-        print 'Search finish...'
+        dup(sys.argv[1], mode='win')
+        #print 'Search finish...'
     else:
-        print 'no'
+        #dup('*.pdf')
+        pass
+
     
