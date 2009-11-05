@@ -18,14 +18,17 @@ import codecs
 
 def md5_for_file(fn, block_size=2**20):
     md5 = hashlib.md5()
-    with open(fn, 'rb') as f:    
-        while True:
-            data = f.read(block_size)
-            if not data:
-                break
-            md5.update(data)
-        return md5.digest()
-
+    try:
+        with open(fn, 'rb') as f:    
+            while True:
+                data = f.read(block_size)
+                if not data:
+                    break
+                md5.update(data)
+            return md5.digest()
+    except IOError:
+        return None
+        
 def match_md5(size_table):
     md5_table = {}
     for a in size_table:
@@ -42,7 +45,10 @@ def match_md5(size_table):
 def match_size(table):
     size_table = {}
     for fn in table:
-        size = os.stat(fn).st_size
+        try:
+            size = os.stat(fn).st_size
+        except WindowsError:
+            continue
         if size_table.has_key(size):
             size_table[size].append(fn)
         else:
@@ -76,7 +82,10 @@ def dup(filter, match_name=True, mode='console'):
 
         print 'check file attribute ...'                     
         result = []
-        for item in table:        
+        table_total = len(table)
+        table_i = 1
+        for item in table:
+            print '(%d/%d)' % (table_i, table_total)
             if len(table[item])>1:
                 # FileSize 比對            
                 size_table = match_size( table[item] )
@@ -94,9 +103,11 @@ def dup(filter, match_name=True, mode='console'):
                         else:
                             child_item = u''
                             for b in md5_table[a]:
+                                b = b.replace('&', '&amp;')
                                 child_item += u'<item id="{0}" />\r\n'.format( str.decode(b, 'big5') )
-                                
+                            item = item.replace('&', '&amp;')
                             result.append( u'<name id="{0}">{1}</name>'.format( item.decode('big5'), child_item ) )
+            table_i += 1
 
                     
         
@@ -104,7 +115,12 @@ def dup(filter, match_name=True, mode='console'):
         import view
         print 'wait for result ...'
         xml = u'<list id="Result">{0}</list>'.format( u'\r\n'.join(result) )
-        view.view_result( xml.encode('utf-8') )
+        #TODO: id 含有 & 無法正常呈現
+        try:
+            view.view_result( xml.encode('utf-8') )
+        except:
+            print 'view result fail, save result to fail.xml'
+            codecs.open('fail.xml', 'w', 'utf-8').write( xml  )        
     elif mode == 'xml':
         codecs.open('result.xml', 'w', 'utf-8').write( u'<list id="Result">{0}</list>'.format( u'\r\n'.join(result) ).encode('utf-8') )        
     else:
