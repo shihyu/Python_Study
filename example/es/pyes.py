@@ -15,6 +15,14 @@ import sys
 import hashlib
 import view
 import codecs
+import threading, time, Queue
+
+THREAD_LIMIT = 10
+jobs = Queue.Queue(0)
+g_lock = threading.Lock()
+g_total = 0
+g_i = 0
+result = []
 
 def md5_for_file(fn, block_size=2**20):
     md5 = hashlib.md5()
@@ -53,9 +61,55 @@ def match_size(table):
             size_table[size].append(fn)
         else:
             size_table[size] = [fn]
+
+            
     return size_table
 
 
+def thread_worker():
+    while True: # forever
+        try:
+            mode, item, dataset = jobs.get()
+            
+            g_lock.acquire()
+            global g_total, g_i
+            print '(%d/%d)' % (g_i, g_total)
+            g_i += 1            
+            g_lock.release()
+            
+            # do it
+            # FileSize 比對            
+            size_table = match_size( dataset )
+
+            # md5 比對
+            md5_table = match_md5(size_table)
+
+            # 顯示結果                        
+            for a in md5_table:
+                if len(md5_table[a])>1:
+                    if mode == 'console':
+                        g_lock.acquire()
+                        print item
+                        print '\r\n'.join( md5_table[a] )                
+                        print
+                        g_lock.release()
+                    else:
+                        child_item = u''
+                        for b in md5_table[a]:
+                            b = b.replace('&', '&amp;')
+                            child_item += u'<item id="{0}" />\r\n'.format( str.decode(b, 'big5') )
+                        item = item.replace('&', '&amp;')
+                        g_lock.acquire()
+                        global result
+                        result.append( u'<name id="{0}">{1}</name>'.format( item.decode('big5'), child_item ) )
+                        g_lock.release()
+            
+            jobs.task_done()
+            
+        except Queue.Empty:
+            print 'empty'
+            # Nothing left to do, time to die
+            return
 
 cmd = 'es.exe %s'
 
@@ -81,34 +135,27 @@ def dup(filter, match_name=True, mode='console'):
                 table[fn] = [line]
 
         print 'check file attribute ...'                     
-        result = []
-        table_total = len(table)
-        table_i = 1
+        #result = []
+        #table_total = len(table)
+        #table_i = 1
+        global g_total, g_i, result
+        g_total = 0
+        g_i = 1
         for item in table:
-            print '(%d/%d)' % (table_i, table_total)
+            #print '(%d/%d)' % (table_i, table_total)
             if len(table[item])>1:
-                # FileSize 比對            
-                size_table = match_size( table[item] )
-
-                # md5 比對
-                md5_table = match_md5(size_table)
-
-                # 顯示結果                        
-                for a in md5_table:
-                    if len(md5_table[a])>1:
-                        if mode == 'console':                            
-                            print item
-                            print '\r\n'.join( md5_table[a] )                
-                            print
-                        else:
-                            child_item = u''
-                            for b in md5_table[a]:
-                                b = b.replace('&', '&amp;')
-                                child_item += u'<item id="{0}" />\r\n'.format( str.decode(b, 'big5') )
-                            item = item.replace('&', '&amp;')
-                            result.append( u'<name id="{0}">{1}</name>'.format( item.decode('big5'), child_item ) )
-            table_i += 1
-
+                jobs.put( [mode, item, table[item] ] )
+                
+                
+        #    table_i += 1
+        g_total = jobs.qsize()
+        
+        for n in xrange(THREAD_LIMIT):
+            t = threading.Thread(target=thread_worker)
+            t.setDaemon(True)
+            t.start()
+            
+        jobs.join()
                     
         
     if mode == 'win':
@@ -120,7 +167,9 @@ def dup(filter, match_name=True, mode='console'):
             view.view_result( xml.encode('utf-8') )
         except:
             print 'view result fail, save result to fail.xml'
-            codecs.open('fail.xml', 'w', 'utf-8').write( xml  )        
+        finally:
+            codecs.open('result.xml', 'w', 'utf-8').write( xml  )
+            print 'saved'
     elif mode == 'xml':
         codecs.open('result.xml', 'w', 'utf-8').write( u'<list id="Result">{0}</list>'.format( u'\r\n'.join(result) ).encode('utf-8') )        
     else:
