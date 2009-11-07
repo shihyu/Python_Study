@@ -22,6 +22,7 @@ jobs = Queue.Queue(0)
 g_lock = threading.Lock()
 g_total = 0
 g_i = 0
+g_writer = None
 result = []
 
 def md5_for_file(fn, block_size=2**20):
@@ -65,19 +66,55 @@ def match_size(table):
             
     return size_table
 
+class console_writer:
+    def write(self, item, dataset):
+        print item
+        print '\r\n'.join( dataset )                
+        print        
+        pass
+    def close(self):
+        pass
 
-def thread_worker():
+class xml_writer:
+    def write(self, item, dataset):
+        child_item = u''
+        for b in dataset:
+            b = b.replace('&', '&amp;')
+            child_item += u'<item id="{0}" />\r\n'.format( str.decode(b, 'big5') )
+        item = item.replace('&', '&amp;')
+
+        global result
+        result.append( u'<name id="{0}">{1}</name>'.format( item.decode('big5'), child_item ) )        
+    def close(self):
+        global result
+        xml = u'<list id="Result">{0}</list>'.format( u'\r\n'.join(result) )
+        codecs.open('result.xml', 'w', 'utf-8').write( xml  )
+
+class view_writer(xml_writer):
+    def close(self):
+        import view
+        xml = u'<list id="Result">{0}</list>'.format( u'\r\n'.join(result) )
+        #TODO: id 含有 & 無法正常呈現
+        try:
+            view.view_result( xml.encode('utf-8') )
+        except:
+            print 'view result fail, save result to fail.xml'
+        finally:
+            codecs.open('result.xml', 'w', 'utf-8').write( xml  )
+            print 'saved'
+            
+def thread_worker():    
     while True: # forever
         try:
             mode, item, dataset = jobs.get()
-            
+
+            # 顯示進度
             g_lock.acquire()
             global g_total, g_i
             print '(%d/%d)' % (g_i, g_total)
             g_i += 1            
-            g_lock.release()
+            g_lock.release()            
             
-            # do it
             # FileSize 比對            
             size_table = match_size( dataset )
 
@@ -87,29 +124,16 @@ def thread_worker():
             # 顯示結果                        
             for a in md5_table:
                 if len(md5_table[a])>1:
-                    if mode == 'console':
-                        g_lock.acquire()
-                        print item
-                        print '\r\n'.join( md5_table[a] )                
-                        print
-                        g_lock.release()
-                    else:
-                        child_item = u''
-                        for b in md5_table[a]:
-                            b = b.replace('&', '&amp;')
-                            child_item += u'<item id="{0}" />\r\n'.format( str.decode(b, 'big5') )
-                        item = item.replace('&', '&amp;')
-                        g_lock.acquire()
-                        global result
-                        result.append( u'<name id="{0}">{1}</name>'.format( item.decode('big5'), child_item ) )
-                        g_lock.release()
+                    g_lock.acquire()
+                    g_writer.write( item, md5_table[a])
+                    g_lock.release()
+
             
             jobs.task_done()
             
         except Queue.Empty:
-            print 'empty'
-            # Nothing left to do, time to die
             return
+
 
 cmd = 'es.exe %s'
 
@@ -135,19 +159,22 @@ def dup(filter, match_name=True, mode='console'):
                 table[fn] = [line]
 
         print 'check file attribute ...'                     
-        #result = []
-        #table_total = len(table)
-        #table_i = 1
-        global g_total, g_i, result
-        g_total = 0
+        global g_total, g_i, result, g_writer
+
+        # 生成 Writer
+        if mode == 'win':
+             g_writer = view_writer()
+        elif mode == 'xml':
+             g_writer = xml_writer()
+        else:
+            g_writer = console_writer()
+
+        # 產生 thread job
         g_i = 1
         for item in table:
-            #print '(%d/%d)' % (table_i, table_total)
             if len(table[item])>1:
                 jobs.put( [mode, item, table[item] ] )
-                
-                
-        #    table_i += 1
+                           
         g_total = jobs.qsize()
         
         for n in xrange(THREAD_LIMIT):
@@ -156,46 +183,17 @@ def dup(filter, match_name=True, mode='console'):
             t.start()
             
         jobs.join()
-                    
-        
-    if mode == 'win':
-        import view
-        print 'wait for result ...'
-        xml = u'<list id="Result">{0}</list>'.format( u'\r\n'.join(result) )
-        #TODO: id 含有 & 無法正常呈現
-        try:
-            view.view_result( xml.encode('utf-8') )
-        except:
-            print 'view result fail, save result to fail.xml'
-        finally:
-            codecs.open('result.xml', 'w', 'utf-8').write( xml  )
-            print 'saved'
-    elif mode == 'xml':
-        codecs.open('result.xml', 'w', 'utf-8').write( u'<list id="Result">{0}</list>'.format( u'\r\n'.join(result) ).encode('utf-8') )        
-    else:
-        pass
-        """
-        table = []        
-        for line in p:
-            line = line.strip()
-            table.append(line)
-            
-            # FileSize 比對            
-            size_table = match_size( table )
-                
-            # md5 比對
-            md5_table = match_md5(size_table)        
-        
-            print '\r\n'.join( md5_table )                
-            print
-        """
+
+    print 'wait for result ...'                    
+    g_writer.close()
+    print 'finish'
         
 if __name__ == '__main__':
     if len(sys.argv)>1:
         dup(sys.argv[1], mode='win')
         #print 'Search finish...'
     else:
-        #dup('*.pdf')
+        dup('*.pdf')
         pass
 
     
