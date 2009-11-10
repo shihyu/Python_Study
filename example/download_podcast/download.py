@@ -15,10 +15,6 @@ import urllib
 import feedparser 
 feed = feedparser.parse('http://feeds.feedburner.com/HanselminutesCompleteMP3')
 
-def download_file(url, fn):
-    pass
-
-#feed['items'][0]['enclosures'][0]['url']
 for item in feed['items']:
     try:
         url= item['enclosures'][0]['url']
