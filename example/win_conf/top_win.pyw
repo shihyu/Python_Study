@@ -36,21 +36,22 @@ def fill_win_list():
     for item in handles:
         append(lst, item['name'].decode('big5') )
 
-handles = []        
-win = Tk()
-win.title("Top Level Window")
-win.geometry('500x500')
-frame = Frame(win, width=400)
+if __name__ == '__main__':
+    handles = []        
+    win = Tk()
+    win.title("Top Level Window")
+    win.geometry('500x500')
+    frame = Frame(win, width=400)
 
-lst = Listbox(frame)
-fill_win_list()
+    lst = Listbox(frame)
+    fill_win_list()
 
-lst.bind("<Double-Button-1>", lst_ondblclick)
-lst.pack(expand=1, fill="both", side=LEFT)
+    lst.bind("<Double-Button-1>", lst_ondblclick)
+    lst.pack(expand=1, fill="both", side=LEFT)
 
-btn = Button(win, text="Refresh")
-btn.bind("<ButtonRelease-1>", btnRefresh_click)
-btn.pack(side=TOP)
+    btn = Button(win, text="Refresh")
+    btn.bind("<ButtonRelease-1>", btnRefresh_click)
+    btn.pack(side=TOP)
 
-frame.pack(expand=1, fill="both")
-win.mainloop()
+    frame.pack(expand=1, fill="both")
+    win.mainloop()
