@@ -96,7 +96,7 @@ class DevicesForm(Form):
 
     def buttonOk_Click(self, sender, e):
     	if (0 < self.comboboxCaptureDeviceCombo.Items.Count):
-			self.mf.CaptureDeviceGuid = self.devices[0].DriverGuid
+            self.mf.CaptureDeviceGuid = self.devices[0].DriverGuid
 		
         self.Close()
 
