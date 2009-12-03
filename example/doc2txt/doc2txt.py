@@ -14,10 +14,23 @@ import os
 import win32com.client
 import sys
 import re
-
-msword = Dispatch('Word.Application')
+msword = win32com.client.Dispatch('Word.Application')
 msword.DisplayAlerts = 0
-doc 	= msword.Documents.Open(FileName="xxx.doc")
-wc = win32com.client.constants
-doc.SaveAs(FileName ='xxx.doc', FileFormat = wc.wdFormatHTML)
+for fn in glob.glob("H:\\¨ä¥L¸Öºq\\*.doc"):
+    doc = fn
+    print '%s -- processing ' % doc
+    path, name = os.path.split(fn)
+    #print path, name
+    name,ext = os.path.splitext(name)
+    name = name + ".txt"
+    txt = os.path.join(path, name)
+    #print fn
+    
+    try:
+        doc 	= msword.Documents.Open(FileName=doc)
+        doc.SaveAs(FileName =txt, FileFormat = 2)
+    except:
+        print '%s -- fail ' % doc 
+
 msword.Quit()
+

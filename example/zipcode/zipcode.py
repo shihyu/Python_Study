@@ -83,3 +83,13 @@ def test():
     cur.execute('select count(*) from area where city_id = 25')
     print cur.fetchone()
     db.close()
+
+key = 0
+for line in open('zipdata.txt'):
+    data= line.strip()
+    if '#' in data:
+        key = int(data.replace('#', ''))        
+        continue
+    else:
+        data  = filter( lambda x: len(x)>0, data.split(' '))
+        print '[%d, "%s", %d],' %(int(data[1]), data[0], key)
