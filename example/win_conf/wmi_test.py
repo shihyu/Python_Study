@@ -102,6 +102,34 @@ class OSInfo():
     def byte_to_mb(self, v):
         return (v+1048575)/1048576
 
+"""
+列出所有的行程
+Select * From Win32_Process 
+
+列出所有系統服務
+Select * From Win32_Service 
+
+Select * From Cim_DataFile 
+Where Drive = "C:" 
+And Path = "\\Scripts\\" 
+
+Associators Of {Win32_NetworkAdapter.DeviceId=1} 
+
+Associators Of {Win32_NetworkAdapter.DeviceId=1} 
+Where ResultClass = Win32_NetworkAdapterConfiguration 
+
+Associators Of {Win32_NetworkAdapter.DeviceId=1} 
+Where AssocClass = Win32_NetworkAdapterSetting 
+
+References Of {Win32_NetworkAdapter.DeviceId=1} 
+
+Select * From __InstanceCreationEvent 
+Within 5 
+Where TargetInstance Isa "Win32_Process"
+
+ref
+[1] http://www.codeproject.com/KB/system/WQLByExample.aspx
+"""
 if __name__ == '__main__':
     oi = OSInfo()
     oi.dump_SerialPort()
