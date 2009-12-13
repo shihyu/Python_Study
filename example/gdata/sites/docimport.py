@@ -1,4 +1,13 @@
 # -*- coding: cp950 -*-
+"""
+Description: 批次匯入文章到 Google Sites
+
+Author: Chui-Wen Chiu <sisimi.pchome@gmail.com>
+License: PYTHON SOFTWARE FOUNDATION LICENSE
+"""
+
+__author__ = "Chui-Wen Chiu"
+__author_email__ = "cwchiu@hotmail.com"
 import getopt
 
 import os.path
@@ -9,12 +18,7 @@ import glob
 import codecs
 
 import time, random, hashlib            
-def uuid( *args ):
-  """
-    Generates a universally unique ID.
-    Any arguments only create more randomness.
-  """
-  
+def uuid( *args ): 
   t = long( time.time() * 1000 )
   r = long( random.random()*100000000000000000L )
   try:
@@ -124,5 +128,5 @@ if __name__ == '__main__':
   print name, pwd, src      
   a = DocsImport()
   a.login(name, pwd)
-  a.doIt(src) # "F:\\MyExample\\*.txt"
+  a.doIt(src) 
   print 'finish'
