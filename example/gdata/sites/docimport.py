@@ -37,6 +37,8 @@ class DocsImport():
   批次匯入
   """
   def __init__(self, site_name='wmdn', domain='sunnet.twbbs.org'):
+    self.dn = domain
+    self.sn = site_name
     self.client = gdata.sites.client.SitesClient(source=SOURCE_APP_NAME, site=site_name, domain=domain)
     self.client.http_client.debug = False
     self.client.ssl = True
@@ -70,11 +72,16 @@ class DocsImport():
     except KeyboardInterrupt:
       return
     
-  def doIt(self, src):
+  def doIt(self, src, parent_name = None):
     print src
-    # 取得暫存文件 feed
-    feed = self.client.GetContentFeed('https://sites.google.com/feeds/content/sunnet.twbbs.org/wmdn?path=/zan-cun')
-    parent = feed.entry[0]    
+    parent = None    
+    if not parent_name is None:
+      # 取得上層 feed
+      feed = self.client.GetContentFeed('https://sites.google.com/feeds/content/%s/%s?path=%s' %(self.dn, self.sn, parent_name))
+      if len(feed.entry)>0:
+        parent = feed.entry[0]
+        
+
     for f in glob.glob(src):
         fn = f.split('\\')[-1]
         name = fn.split('.')[0]
@@ -85,29 +92,46 @@ class DocsImport():
             content=codecs.open(f, 'r', 'utf-8').read()            
           except UnicodeDecodeError, error:            
             print '%s =>open file fail, encode invalid' % name
-            
+            continue
+          
         self._import( name.decode('cp950'), ('<pre>%s</pre>' %content), parent )
 
-        
+
+def printHelp():
+    print """python docimport.py --name [gmail username]
+                                    --pwd [gmail passowrd]
+                                    --src [import path]
+                                    --dn [domain]
+                                    --sn [site name]
+            example:
+            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt
+
+            example:
+            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt -sn chuiwenchiu
+
+            example:
+            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt -sn chuiwenchiu  -dn site
+
+            example:
+            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt -sn wmdn  -dn sunnet.twbbs.org            
+          """
+    sys.exit(2)
+    
 if __name__ == '__main__':
 
   try:
     opts, args = getopt.getopt(sys.argv[1:], '',
-                               ['name=', 'pwd=', 'src='])
+                               ['name=', 'pwd=', 'src=', 'sn=', 'dn=', 'pn='])
   except getopt.error, msg:
-    print """python docimport.py --name [gmail username]
-                                    --pwd [gmail passowrd]
-                                    --src [import path]
-            example:
-            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt
-          """
+    printHelp()
 
-    sys.exit(2)
 
   name = None
   pwd = None
   src = None
-  
+  sn = 'wmdn'
+  dn = 'sunnet.twbbs.org' # or 'site'
+  pn = None
   for option, arg in opts:
     if option == '--name':
       name = arg
@@ -115,18 +139,24 @@ if __name__ == '__main__':
       pwd = arg
     elif option == '--src':
       src = arg
-
-  if src is None:
-    exit('source is null')
+    elif option == '--sn':
+      sn = arg
+    elif option == '--dn':
+      dn = arg
+    elif option == '--pn':
+      pn = arg
+      
+  if src is None or sn is None:
+    printHelp()
     
   if name is None:
     name = raw_input('username: ')
 
   if pwd is None:
     pwd = raw_input('password: ')
-
+    
   print name, pwd, src      
-  a = DocsImport()
+  a = DocsImport(site_name=sn, domain=dn)
   a.login(name, pwd)
-  a.doIt(src) 
+  a.doIt(src, pn) 
   print 'finish'
