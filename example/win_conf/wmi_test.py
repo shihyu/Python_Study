@@ -102,6 +102,13 @@ class OSInfo():
     def byte_to_mb(self, v):
         return (v+1048575)/1048576
 
+    def dump_cpu_temperature():
+        """
+        CPU 溫度
+        """
+        for item in self._w.query("Select * From MSAcpi_ThermalZoneTemperature"):
+           print item.CurrentTemperature
+           
 """
 列出所有的行程
 Select * From Win32_Process 
@@ -134,6 +141,7 @@ if __name__ == '__main__':
     oi = OSInfo()
     oi.dump_SerialPort()
 
+    
 
 
 
