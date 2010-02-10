@@ -1,6 +1,6 @@
 # -*- coding: cp950 -*-
 """
-Description: 批次匯入文章到 Google Sites
+Description: 批次匯入 Scrapbook 導出文章到 Google Sites，不支援圖片
 
 Author: Chui-Wen Chiu <sisimi.pchome@gmail.com>
 License: PYTHON SOFTWARE FOUNDATION LICENSE
@@ -16,65 +16,25 @@ import gdata.sites.client
 import gdata.sites.data
 import glob
 import codecs
+import docimport
+import logging
+   
 
-import time, random, hashlib            
-def uuid( *args ): 
-  t = long( time.time() * 1000 )
-  r = long( random.random()*100000000000000000L )
-  try:
-    a = socket.gethostbyname( socket.gethostname() )
-  except:
-    # if we can't get a network address, just imagine one
-    a = random.random()*100000000000000000L
-  data = str(t)+' '+str(r)+' '+str(a)+' '+str(args)
-  data = hashlib.md5( data ).hexdigest() 
-  return data
-
-
-SOURCE_APP_NAME = 'googleInc-GoogleSitesAPIPythonLibSample-v1.0'
-class DocsImport():
+class DocsImportScrapbook(docimport.DocsImport):
   """
   批次匯入
   """
-  def __init__(self, site_name='wmdn', domain='sunnet.twbbs.org'):
-    self.dn = domain
-    self.sn = site_name
-    self.client = gdata.sites.client.SitesClient(source=SOURCE_APP_NAME, site=site_name, domain=domain)
-    self.client.http_client.debug = False
-    self.client.ssl = True
-
-  def login(self,name, password):
-    """
-    登入
-    """
-    try:
-      self.client.client_login(name, password, source=SOURCE_APP_NAME, service=self.client.auth_service)
-    except gdata.client.BadAuthentication:
-      exit('Invalid user credentials given.')
-    except gdata.client.Error, error:
-      print error
-      exit('Login Error')    
-
-  def _import(self, title, content, parent= None):
-    """
-    匯入
-    """    
-    try:
-      # 文件標題
-      # 內文
-      # url
-      new_entry = self.client.CreatePage('webpage', title, content, uuid(), parent=parent)
-      if new_entry.GetAlternateLink():
-        print '%s => %s' % (title, new_entry.GetAlternateLink().href)         
-    except gdata.client.RequestError, error:
-      print '%s =>fail' % title
-      print error
-    except KeyboardInterrupt:
-      return
-    
+   
   def doIt(self, src, parent_name = None):
     print src
-    parent = None    
+    parent = None
+    log = logging.getLogger()
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    h = logging.FileHandler('fail.log')
+    h.setFormatter(formatter)
+    log.addHandler(h)
+    log.setLevel(logging.INFO)
+
     if not parent_name is None:
       # 取得上層 feed
       feed = self.client.GetContentFeed('https://sites.google.com/feeds/content/%s/%s?path=%s' %(self.dn, self.sn, parent_name))
@@ -82,39 +42,34 @@ class DocsImport():
         parent = feed.entry[0]
         
 
-    for f in glob.glob(src):
+    for f in glob.glob(src + '\\*'):      
         print f
-        fn = f.split('\\')[-1]
+        fn = f.split('\\')[-1]        
         name = fn.split('.')[0]
         try:
+          f = f+'\\index.html'
           content=codecs.open(f, 'r', 'cp950').read()
         except UnicodeDecodeError, error:
           try:
             content=codecs.open(f, 'r', 'utf-8').read()            
           except UnicodeDecodeError, error:            
             print '%s =>open file fail, encode invalid' % name
+            logl.info(name)
             continue
           
         self._import( name.decode('cp950'), ('<pre>%s</pre>' %content), parent )
 
 
 def printHelp():
-    print """python docimport.py --name [gmail username]
+    print """python docimport-scrapbook.py --name [gmail username]
                                     --pwd [gmail passowrd]
                                     --src [import path]
                                     --dn [domain]
                                     --sn [site name]
-            example:
-            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt
+                                    --pn [parent node]
 
             example:
-            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt -sn chuiwenchiu
-
-            example:
-            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt -sn chuiwenchiu  -dn site
-
-            example:
-            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt -sn wmdn  -dn sunnet.twbbs.org            
+            python docunoirt.py --name myid --pwd 1234 --src c:\temp --sn wmdn  --dn sunnet.twbbs.org --pn /
           """
     sys.exit(2)
     
@@ -157,7 +112,7 @@ if __name__ == '__main__':
     pwd = raw_input('password: ')
     
   print name, pwd, src      
-  a = DocsImport(site_name=sn, domain=dn)
+  a = DocsImportScrapbook(site_name=sn, domain=dn)
   a.login(name, pwd)
   a.doIt(src, pn) 
   print 'finish'
