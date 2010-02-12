@@ -16,6 +16,7 @@ import gdata.sites.client
 import gdata.sites.data
 import glob
 import codecs
+import logging
 
 import time, random, hashlib            
 def uuid( *args ): 
@@ -42,6 +43,13 @@ class DocsImport():
     self.client = gdata.sites.client.SitesClient(source=SOURCE_APP_NAME, site=site_name, domain=domain)
     self.client.http_client.debug = False
     self.client.ssl = True
+    log = logging.getLogger()
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    h = logging.FileHandler('fail.log')
+    h.setFormatter(formatter)
+    log.addHandler(h)
+    log.setLevel(logging.INFO)    
+    self.log = log
 
   def login(self,name, password):
     """
@@ -68,6 +76,7 @@ class DocsImport():
         print '%s => %s' % (title, new_entry.GetAlternateLink().href)         
     except gdata.client.RequestError, error:
       print '%s =>fail' % title
+      self.log.info('import fail %s' % title)
       print error
     except KeyboardInterrupt:
       return
