@@ -1,6 +1,6 @@
 # -*- coding: cp950 -*-
 """
-Description: CDO µo°e *.eml ÀÉ®×
+Description: CDO ç™¼é€ *.eml æª”æ¡ˆ
 
 Author: Chui-Wen Chiu <sisimi.pchome@gmail.com>
 License: PYTHON SOFTWARE FOUNDATION LICENSE
