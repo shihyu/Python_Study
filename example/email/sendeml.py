@@ -1,4 +1,4 @@
-# -*- coding: cp950 -*-
+# -*- coding: utf-8 -*-
 """
 Description: CDO 發送 *.eml 檔案
 
