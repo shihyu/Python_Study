@@ -130,11 +130,20 @@ def scrapbook(url):
     #print title,encoding
     create_index_dat(target_path, title, url, encoding)
      
+# 	'http://www.codeproject.com/KB/cs/iismanager.aspx',
+#	'http://software.sopili.net/post/baidu-hand-write/?utm_source=feedburner&utm_medium=feed&utm_campaign=Feed:+SopiliSoftware+(軟體邦：軟體下載、線上工具)',
+#	'http://www.shareapic.net/View-21911994-華碩新款筆電代言美女甜美照.html',
+#	'http://www.techbang.com.tw/?p=36545&utm_source=feedburner&utm_medium=feed&utm_campaign=Feed:+techbang+(T客邦+最新文章)',
+#	'http://blogs.msdn.com/joelpob/archive/2005/10/04/476965.aspx',
+#	'http://yeayea0515.pixnet.net/blog/post/29507892',
+#	'http://tupian.hezoom.cn/',
+#	'http://koshiyen.pixnet.net/blog/post/6460643',
+#	'http://www.meijumi.com/article.asp?id=2913',
 
 if __name__ == '__main__':
     #url = sys.argv[1]
     urls=[	
-	
+
     ]		
     total = len(urls)
     idx = 1
