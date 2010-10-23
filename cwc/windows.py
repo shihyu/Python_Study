@@ -9,6 +9,17 @@ from ctypes import *
 def open_file_with_app(fn):
     ShellExecute(0, None, fn, None, "c:\\", True)
 
+def win_top_by_handle(h, e):
+    """
+    視窗設定為上層顯示
+    """
+    if h==0: 
+        return
+    if(e == True):
+        windll.user32.SetWindowPos(h, -1,0,0,0,0,3)
+    else:
+        windll.user32.SetWindowPos(h, -2,0,0,0,0,3)
+        
 def win_top(title, e):
     """
     視窗設定為上層顯示
@@ -67,6 +78,9 @@ def proc_list():
     print "\n".join(processes)
 
 
-
+if __name__ == '__main__':
+    win_list()
+    #windll.user32.SetWindowPos(197976, -1,0,0,0,0,3)
+    print 'x'
 
 
