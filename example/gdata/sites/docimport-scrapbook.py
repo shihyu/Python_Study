@@ -6,9 +6,6 @@ Description: 批次匯入 Scrapbook 導出文章到 Google Sites，不支援圖�
 1. 遇到 » 會發生錯誤
 2. 不支援簡體中文
 3. 不支援圖片
-
-Author: Chui-Wen Chiu <sisimi.pchome@gmail.com>
-License: PYTHON SOFTWARE FOUNDATION LICENSE
 """
 
 __author__ = "Chui-Wen Chiu"
@@ -22,9 +19,7 @@ import gdata.sites.data
 import glob
 import codecs
 import docimport
-
    
-
 class DocsImportScrapbook(docimport.DocsImport):
   """
   批次匯入
@@ -67,55 +62,16 @@ def printHelp():
     print """python docimport-scrapbook.py --name [gmail username]
                                     --pwd [gmail passowrd]
                                     --src [import path]
-                                    --dn [domain]
-                                    --sn [site name]
-                                    --pn [parent node]
+                                    --site [googlde site url]
 
             example:
-            python docimport-scrapbook.py --name myid --pwd 1234 --src c:\temp --sn wmdn  --dn sunnet.twbbs.org --pn /
-            python docimport-scrapbook.py --name myid --pwd 1234 --src c:\temp --sn wmdn  --dn site --pn /
+            python docimport-scrapbook.py --name myid --pwd 1234 --src c:\temp --site https://sites.google.com/site/pythonzhishiku/1148
           """
     sys.exit(2)
     
 if __name__ == '__main__':
-
-  try:
-    opts, args = getopt.getopt(sys.argv[1:], '',
-                               ['name=', 'pwd=', 'src=', 'sn=', 'dn=', 'pn='])
-  except getopt.error, msg:
-    printHelp()
-
-
-  name = None
-  pwd = None
-  src = None
-  sn = 'wmdn'
-  dn = 'sunnet.twbbs.org' # or 'site'
-  pn = None
-  for option, arg in opts:
-    if option == '--name':
-      name = arg
-    elif option == '--pwd':
-      pwd = arg
-    elif option == '--src':
-      src = arg
-    elif option == '--sn':
-      sn = arg
-    elif option == '--dn':
-      dn = arg
-    elif option == '--pn':
-      pn = arg
-      
-  if src is None or sn is None:
-    printHelp()
-    
-  if name is None:
-    name = raw_input('username: ')
-
-  if pwd is None:
-    pwd = raw_input('password: ')
-    
-  print name, pwd, src      
+  name, pwd, src, sn, dn, pn = docimport.parseArgs()
+   
   a = DocsImportScrapbook(site_name=sn, domain=dn)
   a.login(name, pwd)
   a.doIt(src, pn) 

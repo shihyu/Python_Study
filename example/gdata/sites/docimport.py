@@ -1,9 +1,7 @@
-# -*- coding: cp950 -*-
+# -*- coding: utf-8 -*-
 """
 Description: 批次匯入文章到 Google Sites
 
-Author: Chui-Wen Chiu <sisimi.pchome@gmail.com>
-License: PYTHON SOFTWARE FOUNDATION LICENSE
 """
 
 __author__ = "Chui-Wen Chiu"
@@ -17,8 +15,10 @@ import gdata.sites.data
 import glob
 import codecs
 import logging
-
+import urlparse
 import time, random, hashlib            
+import getpass
+
 def uuid( *args ): 
   t = long( time.time() * 1000 )
   r = long( random.random()*100000000000000000L )
@@ -73,13 +73,10 @@ class DocsImport():
       # url
       new_entry = self.client.CreatePage('webpage', title, content, uuid(), parent=parent)
       if new_entry.GetAlternateLink():
-        print '%s => %s' % (title, new_entry.GetAlternateLink().href)         
-    except gdata.client.RequestError, error:
-      print '%s =>fail' % title
-      self.log.info('import fail %s' % title)
-      print error
+        return new_entry.GetAlternateLink().href;
+         
     except KeyboardInterrupt:
-      return
+      return False
     
   def doIt(self, src, parent_name = None):
     print src
@@ -103,45 +100,48 @@ class DocsImport():
           except UnicodeDecodeError, error:            
             print '%s =>open file fail, encode invalid' % name
             continue
-          
-        self._import( name.decode('cp950'), ('<pre>%s</pre>' %content), parent )
-
+        try:  
+          link = self._import( name.decode('cp950'), ('<pre>%s</pre>' %content), parent )
+	  if link == False:
+	     print u'%s =>fail' % src   
+	  else:
+             print '%s => %s' % ('title', f)
+	except gdata.client.RequestError:
+          print u'%s =>fail' % src
+          self.log.info('import fail %s' % f)
+          print error
 
 def printHelp():
     print """python docimport.py --name [gmail username]
                                     --pwd [gmail passowrd]
                                     --src [import path]
-                                    --dn [domain]
-                                    --sn [site name]
+                                    --site [google site url]
             example:
-            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt
-
-            example:
-            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt -sn chuiwenchiu
-
-            example:
-            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt -sn chuiwenchiu  -dn site
-
-            example:
-            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt -sn wmdn  -dn sunnet.twbbs.org            
+            python docunoirt.py --name myid --pwd 1234 --src c:\*.txt --site https://sites.google.com/site/pythonzhishiku/
           """
     sys.exit(2)
-    
-if __name__ == '__main__':
 
+def parseSiteUrl(site):
+  url_part = urlparse.urlsplit(site).path.split('/')      
+  sn = url_part[2]
+  dn = url_part[1]
+  if len( url_part ) > 3:
+    pn = '/' + '/'.join(url_part[3:])
+  else:
+    pn = '/'
+
+  return (sn,dn,pn)
+
+def parseArgs():
   try:
     opts, args = getopt.getopt(sys.argv[1:], '',
-                               ['name=', 'pwd=', 'src=', 'sn=', 'dn=', 'pn='])
+                               ['name=', 'pwd=', 'src=', 'site='])
   except getopt.error, msg:
     printHelp()
-
 
   name = None
   pwd = None
   src = None
-  sn = 'wmdn'
-  dn = 'sunnet.twbbs.org' # or 'site'
-  pn = None
   for option, arg in opts:
     if option == '--name':
       name = arg
@@ -149,13 +149,11 @@ if __name__ == '__main__':
       pwd = arg
     elif option == '--src':
       src = arg
-    elif option == '--sn':
-      sn = arg
-    elif option == '--dn':
-      dn = arg
-    elif option == '--pn':
-      pn = arg
-      
+    elif option == '--site':
+      site = arg
+
+  sn, dn, pn = parseSiteUrl(site)
+
   if src is None or sn is None:
     printHelp()
     
@@ -163,7 +161,12 @@ if __name__ == '__main__':
     name = raw_input('username: ')
 
   if pwd is None:
-    pwd = raw_input('password: ')
+    pwd = getpass.getpass('password: ')
+
+  return (name, pwd, src, sn, dn, pn)
+  
+if __name__ == '__main__':
+  name, pwd, src, sn, dn, pn = parseArgs()
     
   print name, pwd, src      
   a = DocsImport(site_name=sn, domain=dn)

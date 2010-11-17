@@ -108,7 +108,7 @@ def printHelp():
                                     --sn [site name]
 
             example:
-            python docunoirt-file.py --name myid --pwd 1234 --src c:\*.txt --sn wmdn  --dn site
+            python docimport-file.py --name myid --pwd 1234 --src c:\*.txt --sn wmdn  --dn site
           """
     sys.exit(2)
     
