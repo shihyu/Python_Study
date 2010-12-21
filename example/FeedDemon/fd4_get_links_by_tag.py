@@ -38,6 +38,6 @@ def query(FeedDemonPath, tag):
 
 FeedDemonPath = r'H:\FeedDemon-data'
 
-tag = u'php'
+tag = u'亂_facebook'
 query(FeedDemonPath, tag)
                           
