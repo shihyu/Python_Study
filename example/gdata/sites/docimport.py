@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Description: §å¦¸¶×¤J¤å³¹¨ì Google Sites
+Description: æ‰¹æ¬¡åŒ¯å…¥æ–‡ç« åˆ° Google Sites
 
 """
 
@@ -19,6 +19,14 @@ import urlparse
 import time, random, hashlib            
 import getpass
 
+def safe_str(obj):
+    """ return the byte string representation of obj """
+    try:
+        return str(obj)
+    except UnicodeEncodeError:
+        # obj is unicode
+        return unicode(obj).encode('unicode_escape')
+        
 def uuid( *args ): 
   t = long( time.time() * 1000 )
   r = long( random.random()*100000000000000000L )
@@ -35,7 +43,7 @@ def uuid( *args ):
 SOURCE_APP_NAME = 'googleInc-GoogleSitesAPIPythonLibSample-v1.0'
 class DocsImport():
   """
-  §å¦¸¶×¤J
+  æ‰¹æ¬¡åŒ¯å…¥
   """
   def __init__(self, site_name='wmdn', domain='sunnet.twbbs.org'):
     self.dn = domain
@@ -53,7 +61,7 @@ class DocsImport():
 
   def login(self,name, password):
     """
-    µn¤J
+    ç™»å…¥
     """
     try:
       self.client.client_login(name, password, source=SOURCE_APP_NAME, service=self.client.auth_service)
@@ -65,11 +73,11 @@ class DocsImport():
 
   def _import(self, title, content, parent= None):
     """
-    ¶×¤J
+    åŒ¯å…¥
     """    
     try:
-      # ¤å¥ó¼ÐÃD
-      # ¤º¤å
+      # æ–‡ä»¶æ¨™é¡Œ
+      # å…§æ–‡
       # url
       new_entry = self.client.CreatePage('webpage', title, content, uuid(), parent=parent)
       if new_entry.GetAlternateLink():
@@ -77,12 +85,69 @@ class DocsImport():
          
     except KeyboardInterrupt:
       return False
-    
+      
+  def delete(self, src):
+      sn,dn,pn=parseSiteUrl(src)    
+      
+      self.client.site =sn
+      self.client.domain = dn
+      feed = self.client.GetContentFeed('https://sites.google.com/feeds/content/%s/%s?path=%s' %(dn,sn,pn))
+      if len(feed.entry)>0:
+        self.client.Delete(feed.entry[0])
+      
+  def move(self, src, dst, copy=False):
+      '''
+      æ–‡ç« æ¬ç§»
+
+      @param src	
+      @param dst
+      '''
+      sn1,dn1,_=parseSiteUrl(src)    
+      feed = self.client.GetContentFeed('https://sites.google.com/feeds/content/%s/%s?path=%s' %(dn1,sn1,_))
+      old_entry = feed.entry[0]
+      
+      sn2,dn2,_=parseSiteUrl(dst)
+      parent_feed = self.client.GetContentFeed('https://sites.google.com/feeds/content/%s/%s?path=%s' %(dn2,sn2,_))
+      if sn1 == sn2 and dn1 == dn2:            
+          for v in old_entry.link:
+            if v.rel == gdata.sites.data.SITES_PARENT_LINK_REL:
+              v.href = parent_feed.entry[0].GetSelfLink().href
+              old_entry.link.remove(v)
+              break
+
+
+          #if _found == False:
+          import atom.data        
+          parent_link = atom.data.Link(rel=gdata.sites.data.SITES_PARENT_LINK_REL,
+                                       type='application/atom+xml',
+                                       href=parent_feed.entry[0].GetSelfLink().href)
+          old_entry.link.append(parent_link)
+          old_entry.content.html = str(old_entry.content.html).replace('html:', '')
+
+          updated_entry = self.client.Update(old_entry)
+          return updated_entry.GetAlternateLink().href
+      else:          
+          self.client.site = sn2
+          self.client.domain = dn2
+          result = self._import(
+            old_entry.title.text,
+            safe_str(old_entry.content.html).replace('html:', ''),
+            parent_feed.entry[0]
+          )
+          if result == False:
+            raise 'import_fail'
+          else:
+            self.client.site = sn1
+            self.client.domain = dn1
+            if not copy:
+                self.delete(src)
+            return result
+          
   def doIt(self, src, parent_name = None):
-    print src
+    #print src
     parent = None    
     if not parent_name is None:
-      # ¨ú±o¤W¼h feed
+      # å–å¾—ä¸Šå±¤ feed
       feed = self.client.GetContentFeed('https://sites.google.com/feeds/content/%s/%s?path=%s' %(self.dn, self.sn, parent_name))
       if len(feed.entry)>0:
         parent = feed.entry[0]
@@ -102,15 +167,19 @@ class DocsImport():
             continue
         try:  
           link = self._import( name.decode('cp950'), ('<pre>%s</pre>' %content), parent )
-	  if link == False:
-	     print u'%s =>fail' % src   
-	  else:
-             print '%s => %s' % ('title', f)
-	except gdata.client.RequestError:
-          print u'%s =>fail' % src
+          if link == False:
+              print u'%s =>fail' % src   
+          else:
+              print '%s => %s' % ('title', f)
+              os.remove(f)
+        except gdata.client.RequestError:
+          print 'Request Error'
           self.log.info('import fail %s' % f)
-          print error
-
+          
+        except RuntimeError:
+          print 'Runtime Error'
+          self.log.info('import fail %s' % f)
+          
 def printHelp():
     print """python docimport.py --name [gmail username]
                                     --pwd [gmail passowrd]
@@ -165,11 +234,12 @@ def parseArgs():
 
   return (name, pwd, src, sn, dn, pn)
   
+
 if __name__ == '__main__':
   name, pwd, src, sn, dn, pn = parseArgs()
-    
-  print name, pwd, src      
   a = DocsImport(site_name=sn, domain=dn)
   a.login(name, pwd)
-  a.doIt(src, pn) 
+  a.delete('https://sites.google.com/site/cbuilderkb/te/3c2915db67bbf06483309ddf8ba48519')  
+  #a.delete('https://sites.google.com/site/cbuilderkb/20101215/ea98802eff7a098e1798c85233c82770')  
+  #a.doIt(src, pn) 
   print 'finish'
