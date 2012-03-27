@@ -45,7 +45,19 @@ class Wallpaper:
         time.sleep( 2 )
         self.oShell.SendKeys( "{TAB}{TAB}{TAB}{ENTER}"                         )
         time.sleep( 2)
-            
+
+def change_wallpaper(imagePath):
+    import pythoncom
+    from win32com.shell import shell, shellcon
+
+    #imagePath = "c:\\temp\\bug.png"
+    # 取得 IActiveDesktop 介面
+    iad = pythoncom.CoCreateInstance(shell.CLSID_ActiveDesktop, None, pythoncom.CLSCTX_INPROC_SERVER, shell.IID_IActiveDesktop)
+    # 設定桌面
+    iad.SetWallpaper(imagePath, 0)
+    # 套用變更
+    iad.ApplyChanges(shellcon.AD_APPLY_ALL)
+        
 if __name__ == '__main__':
     w = Wallpaper()
     w.ApplyWallPaper(r"c:\programmers-life-cartoon.gif")
